@@ -3,6 +3,7 @@ const topicInput = document.querySelector('#topic');
 const audienceInput = document.querySelector('#audience');
 const toneInput = document.querySelector('#tone');
 const styleInputs = document.querySelectorAll('input[name="style"]');
+const expertiseInputs = document.querySelectorAll('input[name="expertise"]');
 const lengthInput = document.querySelector('#length');
 const lengthValue = document.querySelector('#lengthValue');
 const outlinePanel = document.querySelector('#outlinePanel');
@@ -16,6 +17,60 @@ const steps = document.querySelectorAll('.step');
 
 let brief;
 let outline;
+
+const domainExpertise = {
+  History: {
+    theses: [
+      (title, audience) => `${title} becomes clearer when we trace the historical forces that shaped it and examine what those patterns can teach ${audience.toLowerCase()} today.`,
+      (title, audience) => `A historical view of ${title.toLowerCase()} helps ${audience.toLowerCase()} distinguish lasting lessons from assumptions rooted in a particular time and place.`,
+    ],
+    sections: (topic, audience) => [
+      ['Set the historical scene', `Place ${topic.toLowerCase()} in its historical context and identify the conditions that made it matter.`],
+      ['Follow the turning point', 'Examine a pivotal shift, including the people, institutions, or ideas that changed the prevailing approach.'],
+      ['Draw the pattern forward', `Connect the historical evidence to the choices ${audience.toLowerCase()} face now without treating the past as a simple blueprint.`],
+      ['Carry the lesson ahead', 'Close with one historically informed action readers can adapt to their own context.'],
+    ],
+    opening: (topic) => `History offers a useful lens on ${topic}: today’s assumptions were made over time, through choices and circumstances that can be examined.`,
+    tension: 'Rather than assuming the current way is inevitable, look for the earlier incentives and turning points that made it seem normal.',
+    reframe: 'A historical comparison adds perspective: it separates enduring principles from habits that belong to a particular moment.',
+    practice: 'Use a specific precedent as a test case. Ask what conditions made it work, what changed afterward, and which lesson actually travels to the present.',
+    close: 'The past does not supply a script, but it gives readers a better set of questions for making the next choice.',
+  },
+  Technology: {
+    theses: [
+      (title, audience) => `${title} is a practical leverage point for ${audience.toLowerCase()} when it is examined as a system of tools, constraints, and feedback loops.`,
+      (title, audience) => `For ${audience.toLowerCase()}, ${title.toLowerCase()} is an opportunity to improve the workflow by making its trade-offs and feedback visible.`,
+    ],
+    sections: (topic, audience) => [
+      ['Map the system', `Identify the tools, workflow, and constraints surrounding ${topic.toLowerCase()} for ${audience.toLowerCase()}.`],
+      ['Find the point of friction', 'Show where the current process breaks down and what that costs in attention, reliability, or speed.'],
+      ['Design a small experiment', 'Offer a lightweight change, clear success signal, and feedback loop readers can test.'],
+      ['Make the improvement durable', 'Close with the safeguards that help a useful technical practice survive beyond its first trial.'],
+    ],
+    opening: (topic) => `A technology lens treats ${topic} as a system: tools, people, constraints, and feedback all shape the result.`,
+    tension: 'The important question is not which tool is newest; it is where the current system creates friction or obscures useful feedback.',
+    reframe: 'Design the workflow around observable signals, reasonable constraints, and a change small enough to evaluate.',
+    practice: 'Run a bounded experiment, measure one meaningful outcome, and use the result to decide whether to iterate, integrate, or stop.',
+    close: 'When the system makes the better action easier and visible, the improvement can compound instead of depending on enthusiasm.',
+  },
+  Math: {
+    theses: [
+      (title, audience) => `${title} gives ${audience.toLowerCase()} a stronger basis for action when the variables, assumptions, and evidence are made explicit.`,
+      (title, audience) => `A mathematical model can turn ${title.toLowerCase()} from a vague preference into a question ${audience.toLowerCase()} can measure and test.`,
+    ],
+    sections: (topic, audience) => [
+      ['Define the problem', `Turn ${topic.toLowerCase()} into a precise question by naming the quantities, constraints, and desired outcome.`],
+      ['Check the assumptions', 'Surface the estimates and hidden assumptions that influence the conclusion before treating them as facts.'],
+      ['Work through the model', 'Use a simple comparison or calculation to show how the important variables relate.'],
+      ['Decide with the evidence', 'Close with a measurable next step and a way to update the decision when new information arrives.'],
+    ],
+    opening: (topic) => `A mathematical lens starts by making ${topic} measurable: define the variables, constraints, and trade-offs before choosing an answer.`,
+    tension: 'Intuition is a useful starting point, but it can hide assumptions about scale, rates, and the trade-offs between outcomes.',
+    reframe: 'A simple model is not a claim of certainty; it is a transparent way to test which assumptions drive the result.',
+    practice: 'Choose one metric, estimate a baseline, and compare two plausible scenarios so readers can see what would change the decision.',
+    close: 'Reasoning from explicit assumptions makes the next step easier to explain, measure, and revise as the evidence improves.',
+  },
+};
 
 const blogStyles = {
   Funny: {
@@ -55,28 +110,12 @@ function setStep(step) {
 
 function createOutline() {
   const title = titleCase(brief.topic);
-  const options = [
-    {
-      thesis: `${title} is not just a nice-to-have for ${brief.audience.toLowerCase()}; it is a practical way to make better decisions and create work with more intention.`,
-      sections: [
-        ['Start with the tension', `Open with the familiar friction around ${brief.topic.toLowerCase()} and show why the usual approach falls short.`],
-        ['Name what matters', `Explain the underlying principle in clear terms, grounded in the daily reality of ${brief.audience.toLowerCase()}.`],
-        ['Make it practical', 'Offer a simple framework with concrete actions readers can test this week.'],
-        ['Protect the habit', 'Close by showing how small, repeatable choices turn a good idea into a durable practice.'],
-      ],
-    },
-    {
-      thesis: `The most useful way to think about ${title.toLowerCase()} is as a leverage point: a focused change that improves how ${brief.audience.toLowerCase()} work, decide, and grow.`,
-      sections: [
-        ['The hidden cost of the default', `Show what happens when ${brief.topic.toLowerCase()} is treated as an afterthought.`],
-        ['A better lens', 'Reframe the topic around leverage, clarity, and the compounding value of better choices.'],
-        ['Three moves to begin', 'Share three small but meaningful shifts readers can use immediately.'],
-        ['The long view', 'End with an invitation to build a system that makes the desired behavior easier over time.'],
-      ],
-    },
-  ];
-  const choice = options[Math.floor(Math.random() * options.length)];
-  return { title, ...choice };
+  const domain = domainExpertise[brief.expertise];
+  return {
+    title,
+    thesis: domain.theses[Math.floor(Math.random() * domain.theses.length)](title, brief.audience),
+    sections: domain.sections(brief.topic, brief.audience),
+  };
 }
 
 function renderOutline() {
@@ -94,16 +133,17 @@ function createDraft() {
   const topic = brief.topic.trim().replace(/\.$/, '');
   const audience = brief.audience.toLowerCase();
   const style = blogStyles[brief.style];
+  const domain = domainExpertise[brief.expertise];
   return `
-    <p>${style.intro(topic, audience)}</p>
+    <p>${domain.opening(topic)} ${style.intro(topic, audience)}</p>
     <h3>${first[0]}</h3>
-    <p>${style.tension}</p>
+    <p>${domain.tension} ${style.tension}</p>
     <h3>${second[0]}</h3>
-    <p>${style.reframe}</p>
+    <p>${domain.reframe} ${style.reframe}</p>
     <h3>${third[0]}</h3>
-    <p>${style.practice(brief.tone.toLowerCase())}</p>
+    <p>${domain.practice} ${style.practice(brief.tone.toLowerCase())}</p>
     <h3>${fourth[0]}</h3>
-    <p>${style.close(topic.toLowerCase())}</p>`;
+    <p>${domain.close} ${style.close(topic.toLowerCase())}</p>`;
 }
 
 briefForm.addEventListener('submit', (event) => {
@@ -113,6 +153,7 @@ briefForm.addEventListener('submit', (event) => {
     audience: audienceInput.value,
     tone: toneInput.value,
     style: [...styleInputs].find((input) => input.checked).value,
+    expertise: [...expertiseInputs].find((input) => input.checked).value,
     length: lengthInput.value,
   };
   outline = createOutline();
